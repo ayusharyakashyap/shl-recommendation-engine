@@ -143,6 +143,8 @@ if 'recommendations' not in st.session_state:
     st.session_state.recommendations = None
 if 'query_history' not in st.session_state:
     st.session_state.query_history = []
+if 'current_query' not in st.session_state:
+    st.session_state.current_query = ""
 
 def load_recommender():
     """Load the hybrid recommender model"""
@@ -390,33 +392,41 @@ def main():
     
     # Display sample queries as clickable buttons
     cols = st.columns(len(sample_queries))
-    selected_sample = ""
     for i, sample in enumerate(sample_queries):
         with cols[i]:
             if st.button(f"📋 {sample[:30]}...", key=f"sample_{i}", help=sample):
-                selected_sample = sample
+                st.session_state.current_query = sample
+                st.rerun()
     
-    # Main query input
+    # Main query input - always use session state
     query = st.text_area(
         "**Enter your hiring requirements:**",
-        value=selected_sample,
+        value=st.session_state.current_query,
         height=120,
         placeholder="Example: I need Java developers with 3+ years experience for a 45-minute assessment...",
-        help="Describe the role, required skills, experience level, and any time constraints"
+        help="Describe the role, required skills, experience level, and any time constraints",
+        key="query_input"
     )
+    
+    # Update session state when user types directly
+    if query != st.session_state.current_query:
+        st.session_state.current_query = query
     
     # Professional recommendation button
     st.markdown("<br>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         if st.button("🚀 Generate Assessment Recommendations", type="primary", use_container_width=True):
-            if query.strip():
+            # Always use session state as source of truth
+            current_query = st.session_state.current_query.strip()
+            
+            if current_query:
                 with st.spinner("🤖 AI is analyzing your requirements..."):
                     recommendations = None
                     
                     # Try API first if selected
                     if use_api:
-                        recommendations = call_api_endpoint(query, top_k, include_explanations)
+                        recommendations = call_api_endpoint(current_query, top_k, include_explanations)
                         if recommendations:
                             st.success("✅ Using API endpoint")
                         else:
@@ -431,10 +441,10 @@ def main():
                             
                             if st.session_state.recommender:
                                 recs = st.session_state.recommender.recommend(
-                                    query, top_k=top_k, explain=include_explanations
+                                    current_query, top_k=top_k, explain=include_explanations
                                 )
                                 recommendations = {
-                                    "query": query,
+                                    "query": current_query,
                                     "recommendations": recs,
                                     "total_found": len(recs),
                                     "processing_time_ms": 0
@@ -447,7 +457,7 @@ def main():
                         st.session_state.recommendations = recommendations
                         st.session_state.query_history.append({
                             "timestamp": datetime.now().strftime("%H:%M:%S"),
-                            "query": query,
+                            "query": current_query,
                             "results": len(recommendations["recommendations"])
                         })
                         st.rerun()
@@ -460,9 +470,9 @@ def main():
                         """, unsafe_allow_html=True)
                         
                         # Generate demo recommendations based on query keywords
-                        demo_recs = generate_demo_recommendations(query, top_k)
+                        demo_recs = generate_demo_recommendations(current_query, top_k)
                         recommendations = {
-                            "query": query,
+                            "query": current_query,
                             "recommendations": demo_recs,
                             "total_found": len(demo_recs),
                             "processing_time_ms": 0,
@@ -471,7 +481,7 @@ def main():
                         st.session_state.recommendations = recommendations
                         st.session_state.query_history.append({
                             "timestamp": datetime.now().strftime("%H:%M:%S"),
-                            "query": query,
+                            "query": current_query,
                             "results": len(demo_recs)
                         })
                         st.rerun()
