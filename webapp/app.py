@@ -570,7 +570,7 @@ def main():
             # Create professional assessment card
             st.markdown(f"""
             <div class="assessment-card">
-                <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                     <h3 style="margin: 0; color: #2c3e50; flex-grow: 1;">
                         {type_icon} {rec.get('assessment_name', 'Unknown Assessment')}
                     </h3>
