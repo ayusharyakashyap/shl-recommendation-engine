@@ -1,0 +1,16 @@
+# Render.com deployment configuration
+# https://render.com
+
+# Web Service Configuration
+services:
+  - type: web
+    name: shl-recommendation-app
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run webapp/app.py --server.port=$PORT --server.address=0.0.0.0
+    envVars:
+      - key: PYTHONPATH
+        value: /opt/render/project/src
+      - key: PORT
+        value: 10000
