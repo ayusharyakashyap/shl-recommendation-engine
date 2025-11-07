@@ -568,11 +568,15 @@ def main():
             type_icon = type_icons.get(rec.get('assessment_type', 'unknown').lower(), '📋')
             
             # Create professional assessment card
+            import html
+            assessment_name = html.escape(rec.get('assessment_name', 'Unknown Assessment'))
+            assessment_type = html.escape(rec.get('assessment_type', 'Unknown').title())
+            
             st.markdown(f"""
             <div class="assessment-card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                     <h3 style="margin: 0; color: #2c3e50; flex-grow: 1;">
-                        {type_icon} {rec.get('assessment_name', 'Unknown Assessment')}
+                        {type_icon} {assessment_name}
                     </h3>
                     <span class="confidence-badge {confidence_class}">
                         {confidence_icon} {confidence:.1f}% Match
@@ -582,7 +586,7 @@ def main():
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                     <div>
                         <strong style="color: #7f8c8d;">Assessment Type:</strong><br>
-                        <span style="color: #34495e;">{rec.get('assessment_type', 'Unknown').title()}</span>
+                        <span style="color: #34495e;">{assessment_type}</span>
                     </div>
                     <div>
                         <strong style="color: #7f8c8d;">Confidence Score:</strong><br>
@@ -593,7 +597,8 @@ def main():
             
             # Skills section
             if rec.get('related_skills'):
-                skills_html = " ".join([f'<span style="background: #ecf0f1; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.8rem; margin-right: 0.5rem;">{skill}</span>' 
+                import html
+                skills_html = " ".join([f'<span style="background: #ecf0f1; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.8rem; margin-right: 0.5rem;">{html.escape(str(skill))}</span>' 
                                       for skill in rec['related_skills'][:6]])
                 st.markdown(f"""
                 <div style="margin-bottom: 1rem;">
@@ -612,10 +617,11 @@ def main():
                     explanation_text = rec['explanation']
                 
                 if explanation_text:
+                    explanation_escaped = html.escape(str(explanation_text))
                     st.markdown(f"""
                     <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 4px solid #3498db; margin-bottom: 1rem;">
                         <strong style="color: #7f8c8d;">Why This Assessment:</strong><br>
-                        <span style="color: #2c3e50; font-style: italic;">{explanation_text}</span>
+                        <span style="color: #2c3e50; font-style: italic;">{explanation_escaped}</span>
                     </div>
                     """, unsafe_allow_html=True)
             
